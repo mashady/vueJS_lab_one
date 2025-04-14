@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue Books Lab</title>
+  <script src="https://unpkg.com/vue@3"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+    }
+    .navbar-cart-info {
+      color: white;
+      margin-right: 15px;
+    }
+    .container {
+      padding-top: 20px;
+    }
+    .badge-pages {
+      font-size: 1rem;
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="mainapp">
+    <nav class="navbar navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a href="#" class="navbar-brand"  @click.prevent="isWishVisible = false">mashady store</a>
+        <div class="d-flex align-items-center">
+          <span class="navbar-cart-info me-3">
+            [ {{ wishlist.items.length }} ] 
+            <span v-if="wishlist.items.length == 1">book</span>
+            <span v-else>books</span> in wishlist
+          </span>
+          <button class="btn btn-primary" @click="isWishVisible = true">Wishlist</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div v-if="!isWishVisible">
+        <h1 class="text-center mb-4">Welcome to the Book Store</h1>
+        <p class="text-center lead mb-5">Created for you by <strong>Muhammed Mashady</strong></p>
+        
+        <h2 class="mb-4">Available Books</h2>
+        
+        <div class="row">
+          <div class="col-md-4 mb-4" v-for="book in books" :key="book.ISBN">
+            <div class="card h-100">
+              <img :src="book.image" class="card-img-top" :alt="book.name">
+              <div class="card-body">
+                <h5 class="card-title">{{ book.name }}</h5>
+                <p class="card-text">{{ book.description }}</p>
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                  <span class="badge bg-primary">{{ book.category }}</span>
+                  <span class="badge bg-secondary">{{ book.author }}</span>
+                  <span class="badge bg-warning text-dark">{{ formatPrice(book.price) }}</span>
+                  <span class="badge bg-info text-dark">{{ book.ISBN }}</span>
+                  <span :class="pageBadgeClass(book.pages)" class="badge badge-pages">
+                    {{ book.pages }} pages
+                  </span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-primary w-100" @click="addToWishlist(book)">
+                  Add to Wishlist
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div v-else>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2>Your Wishlist</h2>
+          <button class="btn btn-secondary" @click="isWishVisible = false">Back to Books</button>
+        </div>
+  
+        <div v-if="wishlist.items.length === 0" class="alert alert-info">
+          Your wishlist is empty. Please add some books!
+        </div>
+  
+        <div v-else>
+          <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Cover</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in wishlist.items" :key="item.book.ISBN">
+                <td><img :src="item.book.image" style="height: 50px;"></td>
+                <td>{{ item.book.name }}</td>
+                <td>{{ item.book.author }}</td>
+                <td>{{ formatPrice(item.book.price) }}</td>
+                <td>
+                  <button class="btn btn-danger" @click="removeFromWishlist(item.book)">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    Vue.createApp({
+      data() {
+        return {
+          isWishVisible: false,
+          books: [
+            {
+              ISBN: '111-AAA',
+              name: 'Vue Mastery',
+              category: 'Frontend',
+              description: 'Build Dynamic Frontends with Router & Composition API',
+              image: 'https://m.media-amazon.com/images/I/61nT9iwnFML._AC_UF1000,1000_QL80_.jpg',
+              author: 'Ali Salman',
+              pages:30,
+
+              price: 100
+            },
+            {
+              ISBN: '222-BBB',
+              name: 'JavaScript Pro',
+              category: 'Programming',
+              description: 'Learning Advanced JavaScript Programming',
+              image: 'https://media.springernature.com/full/springer-static/cover-hires/book/978-1-4302-3055-7',
+              author: 'Reem Nasser',
+              pages:150,
+
+              price: 130
+            },
+            {
+              ISBN: '333-CCC',
+              name: 'Design Thinking',
+              category: 'UX/UI',
+              description: 'Creative Problem Solving for Digital Products',
+              image: 'https://media.wiley.com/product_data/coverImage300/21/11195939/1119593921.jpg',
+              author: 'Faisal Alharbi',
+              pages:100,
+              price: 70
+            }
+          ],
+          wishlist: {
+            items: []
+          }
+        }
+      },
+      methods: {
+        formatPrice(price) {
+          return new Intl.NumberFormat("ar-SA", {
+            style: "currency",
+            currency: "SAR",
+            minimumFractionDigits: 0
+          }).format(price);
+        },
+        isBookInWishlist(book) {
+          return this.wishlist.items.some(item => item.book.ISBN === book.ISBN);
+        },
+        addToWishlist(book) {
+          if (!this.isBookInWishlist(book)) {
+            this.wishlist.items.push({ book: book });
+          }
+        },
+        pageBadgeClass(pages) {
+          return pages < 50 ? 'bg-danger' : 'bg-success';
+        },
+        removeFromWishlist(book) {
+          const index = this.wishlist.items.findIndex(item => item.book.ISBN === book.ISBN);
+          if (index !== -1) {
+            this.wishlist.items.splice(index, 1);
+          }
+        },
+        
+      }
+    }).mount("#mainapp");
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
